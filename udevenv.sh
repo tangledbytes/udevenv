@@ -11,7 +11,17 @@ function start() {
 	if [ "$( docker container inspect -f '{{.State.Status}}' $container_name )" == "running" ]; then
 		echo "Container $container_name is already running. Run ./udevenv.sh stop to stop it."
 	else
-		docker run --tty --name ${container_name} -d --privileged --init=false --security-opt seccomp=unconfined --security-opt apparmor=unconfined --tmpfs /tmp --tmpfs /run --user root --hostname $USER-devenv -e KIND_EXPERIMENTAL_CONTAINERD_SNAPSHOTTER -e USERNAME=$USER -e USERPASS=$USERPASS ${image_name}
+		local cmd="docker run"
+		cmd="$cmd --name ${container_name}"
+		cmd="$cmd --tty -d --privileged --init=false --user root"
+		cmd="$cmd --security-opt seccomp=unconfined --security-opt apparmor=unconfined"
+		cmd="$cmd --tmpfs /tmp --tmpfs /run"
+		cmd="$cmd --hostname $USER-devenv"
+		cmd="$cmd -e KIND_EXPERIMENTAL_CONTAINERD_SNAPSHOTTER -e USERNAME=$USER -e USERPASS=$USERPASS"
+		cmd="$cmd $@"
+		cmd="$cmd ${image_name}"
+
+		$cmd
 	fi
 }
 
@@ -49,27 +59,34 @@ function help() {
 
 case "$1" in
 	build)
-		build
+		shift;
+		build $@
 		;;
 	start)
-		start
+		shift;
+		start $@
 		;;
 	stop)
-		stop
+		shift;
+		stop $@
 		;;
 	shell)
-		shell
+		shift;
+		shell $@
 		;;
 	clean)
-		clean
+		shift;
+		clean $@
 		;;
 	logs)
-		logs
+		shift;
+		logs $@
 		;;
 	help)
-		help
+		shift;
+		help $@
 		;;
 	*)
-		help
+		help $@
 		;;
 esac

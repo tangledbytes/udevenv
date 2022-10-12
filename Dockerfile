@@ -7,6 +7,11 @@ ARG TARGETARCH
 ARG TARGETOS
 ARG GOVERSION=go1.19.2
 
+ENV TARGETPLATFORM=${TARGETPLATFORM}
+ENV TARGETARCH=${TARGETARCH}
+ENV TARGETOS=${TARGETOS}
+ENV GOVERSION=${GOVERSION}
+
 RUN mkdir /kind
 
 # Copy the essentials
@@ -17,7 +22,7 @@ RUN echo "Building for OS: ${TARGETOS} ARCH: ${TARGETARCH}"
 
 # Setup core tool ###############################################################
 RUN apt update
-RUN apt install -y build-essential libssl-dev ca-certificates pkg-config locales
+RUN apt install -y build-essential libssl-dev ca-certificates pkg-config locales lsb-release
 RUN apt install -y git curl wget unzip sudo vim automake autoconf autotools-dev \
     zsh software-properties-common neovim
 
@@ -26,22 +31,6 @@ RUN sed -i -e 's/# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen && \
     update-locale LANG=en_US.UTF-8
 
 ENV LANG en_US.UTF-8 
-
-# Setup development tools ########################################################
-WORKDIR /setup
-
-# Setup Golang from go.dev in the container
-RUN rm -rf /usr/local/go
-RUN wget https://go.dev/dl/${GOVERSION}.linux-${TARGETARCH}.tar.gz 
-RUN sudo tar -C /usr/local -xzf ${GOVERSION}.linux-${TARGETARCH}.tar.gz
-ENV PATH /usr/local/go/bin:$PATH
-RUN rm -rf ${GOVERSION}.linux-$TARGETARCH.tar.gz
-
-# Install rust in the container
-RUN curl https://sh.rustup.rs -sSf | sh -s -- -y
-
-# Install NVM in the container
-RUN curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.1/install.sh | zsh
 
 # Setup ZSH ######################################################################
 ## Install default ZSH Plugins
